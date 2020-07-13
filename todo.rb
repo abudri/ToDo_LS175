@@ -21,6 +21,10 @@ get "/lists" do
 end
 
 get "/lists/new" do
-  session[:lists] << { name: "New List", todos: []} # a list is a hash that has two values, a name that is a string, and a todos key that is an array of todos / list items
+  erb :new_list, layout: :layout
+end
+
+post "/lists" do
+  session[:lists] << { name: params[:list_name], todos: []} # remember in our form the <input> tag had a `name` of "list_name", so this is the key, and the value is whatever data we submitted if any, not there yet at this point, and note "list_name" can simply be treated as a symbol by sinatra, so :list_name in params hash
   redirect "/lists"
 end
