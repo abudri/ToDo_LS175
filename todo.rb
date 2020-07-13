@@ -28,7 +28,13 @@ end
 
 # creates a new list and saves it to session data
 post "/lists" do
-  session[:lists] << { name: params[:list_name], todos: []} # remember in our form the <input> tag had a `name` of "list_name", so this is the key, and the value is whatever data we submitted if any, not there yet at this point, and note "list_name" can simply be treated as a symbol by sinatra, so :list_name in params hash
-  session[:success] = "The list has been created." # flash message for successful list creation https://launchschool.com/lessons/9230c94c/assignments/cfb2f0cb
-  redirect "/lists"
+  list_name = params[:list_name].strip # for use in checking if name passed in as a param is valid(exists, not too long or short) before saving, see: https://launchschool.com/lessons/9230c94c/assignments/7923bc3a // .strip to remove any leading or trailing whitespace
+  if (1..100).cover?(list_name.size) # if the list_name is between 1 and 100 characters, instead of using >= and <= operators, see: 
+    session[:lists] << { name: list_name, todos: []} # remember in our form the <input> tag had a `name` of "list_name", so this is the key, and the value is whatever data we submitted if any, not there yet at this point, and note "list_name" can simply be treated as a symbol by sinatra, so :list_name in params hash
+    session[:success] = "The list has been created." # flash message for successful list creation https://launchschool.com/lessons/9230c94c/assignments/cfb2f0cb
+    redirect "/lists"
+  else
+    session[:error] = "The list name must be between 1 and 100 characters." # https://launchschool.com/lessons/9230c94c/assignments/7923bc3a
+    erb :new_list, layout: :layout
+  end
 end
