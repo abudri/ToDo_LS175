@@ -15,16 +15,20 @@ get "/" do
   redirect "/lists" # so home page "/" will just take user to the "/lists" listing, what we want, https://launchschool.com/lessons/9230c94c/assignments/7bdd9818
 end
 
-get "/lists" do
+# view all of the lists
+get "/lists" do # note the flash message for a successful list creation after submitting, is deleted from the `session` hash in the lists.erb view in erb, after it is first displayed there(meaning refreshing /lists will show that deletion and message will be gone)
   @lists = session[:lists] # pull lists from session data
   erb :lists, layout: :layout # added a lists file, https://launchschool.com/lessons/9230c94c/assignments/7bdd9818
 end
 
+# render the create a new list form
 get "/lists/new" do
   erb :new_list, layout: :layout
 end
 
+# creates a new list and saves it to session data
 post "/lists" do
   session[:lists] << { name: params[:list_name], todos: []} # remember in our form the <input> tag had a `name` of "list_name", so this is the key, and the value is whatever data we submitted if any, not there yet at this point, and note "list_name" can simply be treated as a symbol by sinatra, so :list_name in params hash
+  session[:success] = "The list has been created." # flash message for successful list creation https://launchschool.com/lessons/9230c94c/assignments/cfb2f0cb
   redirect "/lists"
 end
