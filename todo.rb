@@ -59,3 +59,35 @@ get '/lists/:id' do # id in the URL is a parameter that we will be using in this
   @list = session[:lists][id]
   erb :list, layout: :layout
 end
+
+# get form for editing an existing todo list
+get '/lists/:id/edit' do
+  id = params[:id].to_i
+  @list = session[:lists][id]
+  erb :edit_list, layout: :layout
+end
+
+# updates an existing todo list, handles saving from edit_list.erb. much of code is taken from post '/lists' do route
+post '/lists/:id' do
+  list_name = params[:list_name].strip # for use in checking if name passed in as a param is valid(exists, not too long or short) before saving, see: https://launchschool.com/lessons/9230c94c/assignments/7923bc3a // .strip to remove any leading or trailing whitespace
+  id = params[:id].to_i  # from edit existing list method above
+  @list = session[:lists][id] # from edit existing list method above
+
+  error = error_for_list_name(list_name) # method call returns a string error message from the method if the list_name passed in is invalid, otherwise it will return nil and the first branch of the if statement won't be executed.
+  if error
+    session[:error] = error # refactored at: https://launchschool.com/lessons/9230c94c/assignments/b47401cd
+    erb :edit_list, layout: :layout
+  else # create the new list name since the above two validations passed
+    @list[:name] = list_name
+    session[:success] = 'The list name has been updated.' # flash message for successful list creation https://launchschool.com/lessons/9230c94c/assignments/cfb2f0cb
+    redirect "/lists/#{id}"
+  end
+end
+
+# delete an individual list, https://launchschool.com/lessons/9230c94c/assignments/ace30260
+post '/lists/:id/destroy' do
+  id = params[:id].to_i  # from edit existing list method above
+  session[:lists].delete_at(id) # remove the list - which is a hash itself, from the session array - using .delete_at, which will delete at the specified index you pass to it, in our case the id is our index
+  session[:success] = 'The list has been deleted.' 
+  redirect '/lists' # redirect to the home page which is '/lists'
+end
