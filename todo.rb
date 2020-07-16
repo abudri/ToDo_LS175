@@ -45,6 +45,12 @@ def error_for_list_name(name)
   end
 end
 
+def error_for_todo(name)
+  if !(1..100).cover?(name.size) # if the list_name is NOT between 1 and 100 characters, instead of using >= and <= operators, see:
+    'Todo list item must be between 1 and 100 characters.' 
+  end
+end
+
 # creates a new list and saves it to session data
 post '/lists' do
   list_name = params[:list_name].strip # for use in checking if name passed in as a param is valid(exists, not too long or short) before saving, see: https://launchschool.com/lessons/9230c94c/assignments/7923bc3a // .strip to remove any leading or trailing whitespace
@@ -62,8 +68,8 @@ end
 
 # view an individual list
 get '/lists/:id' do # id in the URL is a parameter that we will be using in this method
-  id = params[:id].to_i # converting the "1" in "/lists/1" into an integer to get the list based off index from the hash session[:lists], which returns and is an array
-  @list = session[:lists][id]
+  @list_id = params[:id].to_i # converting the "1" in "/lists/1" into an integer to get the list based off index from the hash session[:lists], which returns and is an array. Change from id to @list_id in https://launchschool.com/lessons/9230c94c/assignments/046ee3e0 (about 14-15 mins)
+  @list = session[:lists][@list_id]
   erb :list, layout: :layout
 end
 
@@ -101,9 +107,26 @@ end
 
 # add a todo item to an individual list: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0
 post "/lists/:list_id/todos" do
-  list_id = params[:list_id].to_i # from edit existing list method above, id of the list, but since using todo items, we say :list_id
-  list = session[:lists][list_id]
-  list[:todos] << { name: params[:todo], completed: false } # params[:todo] is the submitted text taken from form submission at the list.erb page submit form for a todo item, which is named "todo"
-  session[:success] = 'The todo item was added to the list'
-  redirect "/lists/#{list_id}" # redirect back to the list we just added the item to
+  @list_id = params[:list_id].to_i # from edit existing list method above, id of the list, but since using todo items, we say :list_id
+  @list = session[:lists][@list_id]
+  text = params[:todo].strip
+
+  error = error_for_todo(text)
+  if error
+    session[:error] = error
+    erb :list, layout: :layout
+  else
+    @list[:todos] << { name: text, completed: false } # params[:todo] is the submitted text taken from form submission at the list.erb page submit form for a todo item, which is named "todo"
+    session[:success] = 'The todo item was added to the list'
+    redirect "/lists/#{@list_id}" # redirect back to the list we just added the item to
+  end
+end
+
+post '/lists/:list_id/todos/:id/destroy' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists][@list_id]
+  todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
+  @list[:todos].delete_at(todo_id)
+  session[:success] = "The todo item has been deleted from the list."
+  redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from 
 end
