@@ -17,6 +17,24 @@ configure do
   set :sessions_secret, 'secret' # setting the session secret, to the string 'secret'
 end
 
+helpers do
+  def list_complete?(list) # checks to see if all todo items in a list are completed
+    todos_count(list) > 0 && todos_remaining_count(list) == 0 # from assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
+  end
+
+  def list_class(list)
+    "complete" if list_complete?(list) # fills in css class attribute with a string for <section> tag for marking title in list.erb as complete(grey and strikethrough). This is about 10 mins into assignment video: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
+  end
+
+  def todos_count(list)
+    list[:todos].size # call .size on the  array of todo items, for total of all todos be they complete or not. Assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
+  end
+
+  def todos_remaining_count(list)
+    list[:todos].select { |todo| !todo[:completed] }.size # gives count of selects how many todo items that are left to be completed int he list[:todos] array. Assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
+  end
+end
+
 before do
   session[:lists] ||= [] # recall that  `session` is a hash, and for key :lists, the value is an array of lists, and each list itself is a hash  # to ensure we at least have an empty array if session[:lists] is non-existent, or nil, https://launchschool.com/lessons/9230c94c/assignments/2f3d171a
 end
