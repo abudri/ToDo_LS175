@@ -10,7 +10,7 @@ require 'tilt/erubis'
 
 # list - hash with key :name a value of string, and key :todos which is an array. see `session[:lists] << { name: list_name, todos: [] } `
 
-# todo - each todo item in a list is a hash itself, contained in the array value of list[:todos], so putting a to item into the array of todos is going to be: `list[:todos] << { name: params[:todo], completed: false }`
+# TODO: - each todo item in a list is a hash itself, contained in the array value of list[:todos], so putting a to item into the array of todos is going to be: `list[:todos] << { name: params[:todo], completed: false }`
 
 configure do
   enable :sessions # tells sinatra to activate it's session support
@@ -46,8 +46,8 @@ def error_for_list_name(name)
 end
 
 def error_for_todo(name)
-  if !(1..100).cover?(name.size) # if the list_name is NOT between 1 and 100 characters, instead of using >= and <= operators, see:
-    'Todo list item must be between 1 and 100 characters.' 
+  unless (1..100).cover?(name.size) # if the list_name is NOT between 1 and 100 characters, instead of using >= and <= operators, see:
+    'Todo list item must be between 1 and 100 characters.'
   end
 end
 
@@ -106,7 +106,7 @@ post '/lists/:id/destroy' do
 end
 
 # add a todo item to an individual list: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0
-post "/lists/:list_id/todos" do
+post '/lists/:list_id/todos' do
   @list_id = params[:list_id].to_i # from edit existing list method above, id of the list, but since using todo items, we say :list_id
   @list = session[:lists][@list_id]
   text = params[:todo].strip
@@ -128,8 +128,8 @@ post '/lists/:list_id/todos/:id/destroy' do
   @list = session[:lists][@list_id]
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
   @list[:todos].delete_at(todo_id)
-  session[:success] = "The todo item has been deleted from the list."
-  redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from 
+  session[:success] = 'The todo item has been deleted from the list.'
+  redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from
 end
 
 # marks a todo item completed or not completed based on current value, after clicking checkbox
@@ -137,8 +137,17 @@ post '/lists/:list_id/todos/:id' do
   @list_id = params[:list_id].to_i
   @list = session[:lists][@list_id]
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
-  is_completed = params[:completed] == "true"
+  is_completed = params[:completed] == 'true'
   @list[:todos][todo_id][:completed] = is_completed # from the form in list.erb,  `name="completed"`
-  session[:success] = "The todo item has been updated."
+  session[:success] = 'The todo item has been updated.'
+  redirect "/lists/#{@list_id}"
+end
+
+# Mark all todo items on a list as Complete true
+post '/lists/:id/complete_all' do
+  @list_id = params[:id].to_i
+  @list = session[:lists][@list_id]
+  @list[:todos].each { |todo| todo[:completed] = true }
+  session[:success] = 'The todo items have all been updated to completed.'
   redirect "/lists/#{@list_id}"
 end
