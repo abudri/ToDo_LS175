@@ -10,7 +10,7 @@ require 'tilt/erubis'
 
 # list - hash with key :name a value of string, and key :todos which is an array. see `session[:lists] << { name: list_name, todos: [] } `
 
-# todo - each todo item in a list is a hash itself, contained in the array value of list[:todos], `list[:todos] << { name: params[:todo], completed: false }`
+# todo - each todo item in a list is a hash itself, contained in the array value of list[:todos], so putting a to item into the array of todos is going to be: `list[:todos] << { name: params[:todo], completed: false }`
 
 configure do
   enable :sessions # tells sinatra to activate it's session support
@@ -122,6 +122,7 @@ post "/lists/:list_id/todos" do
   end
 end
 
+# delete a todo item from a list
 post '/lists/:list_id/todos/:id/destroy' do
   @list_id = params[:list_id].to_i
   @list = session[:lists][@list_id]
@@ -129,4 +130,15 @@ post '/lists/:list_id/todos/:id/destroy' do
   @list[:todos].delete_at(todo_id)
   session[:success] = "The todo item has been deleted from the list."
   redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from 
+end
+
+# marks a todo item completed or not completed based on current value, after clicking checkbox
+post '/lists/:list_id/todos/:id' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists][@list_id]
+  todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
+  is_completed = params[:completed] == "true"
+  @list[:todos][todo_id][:completed] = is_completed # from the form in list.erb,  `name="completed"`
+  session[:success] = "The todo item has been updated."
+  redirect "/lists/#{@list_id}"
 end
