@@ -33,6 +33,28 @@ helpers do
   def todos_remaining_count(list)
     list[:todos].select { |todo| !todo[:completed] }.size # gives count of selects how many todo items that are left to be completed int he list[:todos] array. Assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
   end
+
+  def sort_lists(lists, &block)
+    incomplete_lists = {} # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts lists in order with ones complete at bottom and ones not complete at top
+    complete_lists =  {}
+
+    lists.each_with_index do |list, index|
+      list_complete?(list) ? complete_lists[list] = index : incomplete_lists[list] = index
+    end
+    incomplete_lists.each(&block) # remember each list is a hash, and our call in lists.erb is `sort_lists(@lists) do |list, index| `, so our key is a list, but is passed to block first in the lists.erb view
+    complete_lists.each(&block)
+  end
+  
+  def sort_todos(todos, &block)
+    incomplete_todos = {} # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts todo items for a list in order with ones complete at bottom and ones not complete at top
+    complete_todos =  {}
+
+    todos.each_with_index do |todo, index|
+      todo[:completed] ? complete_todos[todo] = index : incomplete_todos[todo] = index
+    end
+    incomplete_todos.each(&block) # remember each todo is a hash, and our call in lists.erb is `sort_todos(@list[:todos]) do |todo, index|`, so our key is a todo, but is passed to block first in the lists.erb view
+    complete_todos.each(&block)
+  end
 end
 
 before do
