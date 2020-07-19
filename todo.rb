@@ -35,25 +35,19 @@ helpers do
   end
 
   def sort_lists(lists, &block)
-    incomplete_lists = {} # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts lists in order with ones complete at bottom and ones not complete at top
-    complete_lists =  {}
+     # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts lists in order with ones complete at bottom and ones not complete at top
+    complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) } # returns nested array, first array is for list objects that evalutes in block to true, and 2nd array is for those that don't
 
-    lists.each_with_index do |list, index|
-      list_complete?(list) ? complete_lists[list] = index : incomplete_lists[list] = index
-    end
-    incomplete_lists.each(&block) # remember each list is a hash, and our call in lists.erb is `sort_lists(@lists) do |list, index| `, so our key is a list, but is passed to block first in the lists.erb view
-    complete_lists.each(&block)
+    incomplete_lists.each { |list| yield list, lists.index(list) } # remember each list is a hash, and our call in lists.erb is `sort_lists(@lists) do |list, index| `, so our key is a list, but is passed to block first in the lists.erb view
+    complete_lists.each { |list| yield list, lists.index(list) }
   end
   
   def sort_todos(todos, &block)
-    incomplete_todos = {} # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts todo items for a list in order with ones complete at bottom and ones not complete at top
-    complete_todos =  {}
-
-    todos.each_with_index do |todo, index|
-      todo[:completed] ? complete_todos[todo] = index : incomplete_todos[todo] = index
-    end
-    incomplete_todos.each(&block) # remember each todo is a hash, and our call in lists.erb is `sort_todos(@list[:todos]) do |todo, index|`, so our key is a todo, but is passed to block first in the lists.erb view
-    complete_todos.each(&block)
+    # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts todo items for a list in order with ones complete at bottom and ones not complete at top
+    complete_todos, incomplete_todos = todos.partition { |todo| todo[:complete] } # refactored version late in assignment
+    
+    incomplete_todos.each { |todo| yield todo, todos.index(todo) }  # remember each todo is a hash, and our call in lists.erb is `sort_todos(@list[:todos]) do |todo, index|`, so our key is a todo, but is passed to block first in the lists.erb view
+    complete_todos.each  { |todo| yield todo, todos.index(todo) }
   end
 end
 
