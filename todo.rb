@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'sinatra'
-require 'sinatra/reloader'
+require 'sinatra' 
+require 'sinatra/reloader' if development? # deploying to Heroku/Production lesson: https://launchschool.com/lessons/9230c94c/assignments/7d7b4dd7
 require 'sinatra/content_for'
 require 'tilt/erubis'
 
@@ -23,7 +23,7 @@ helpers do
   end
 
   def list_class(list)
-    "complete" if list_complete?(list) # fills in css class attribute with a string for <section> tag for marking title in list.erb as complete(grey and strikethrough). This is about 10 mins into assignment video: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
+    'complete' if list_complete?(list) # fills in css class attribute with a string for <section> tag for marking title in list.erb as complete(grey and strikethrough). This is about 10 mins into assignment video: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
   end
 
   def todos_count(list)
@@ -31,23 +31,23 @@ helpers do
   end
 
   def todos_remaining_count(list)
-    list[:todos].select { |todo| !todo[:completed] }.size # gives count of selects how many todo items that are left to be completed int he list[:todos] array. Assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
+    list[:todos].reject { |todo| todo[:completed] }.size # gives count of selects how many todo items that are left to be completed int he list[:todos] array. Assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
   end
 
-  def sort_lists(lists, &block)
-     # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts lists in order with ones complete at bottom and ones not complete at top
+  def sort_lists(lists)
+    # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts lists in order with ones complete at bottom and ones not complete at top
     complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) } # returns nested array, first array is for list objects that evalutes in block to true, and 2nd array is for those that don't
 
     incomplete_lists.each { |list| yield list, lists.index(list) } # remember each list is a hash, and our call in lists.erb is `sort_lists(@lists) do |list, index| `, so our key is a list, but is passed to block first in the lists.erb view
     complete_lists.each { |list| yield list, lists.index(list) }
   end
-  
-  def sort_todos(todos, &block)
+
+  def sort_todos(todos)
     # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts todo items for a list in order with ones complete at bottom and ones not complete at top
     complete_todos, incomplete_todos = todos.partition { |todo| todo[:complete] } # refactored version late in assignment
-    
-    incomplete_todos.each { |todo| yield todo, todos.index(todo) }  # remember each todo is a hash, and our call in lists.erb is `sort_todos(@list[:todos]) do |todo, index|`, so our key is a todo, but is passed to block first in the lists.erb view
-    complete_todos.each  { |todo| yield todo, todos.index(todo) }
+
+    incomplete_todos.each { |todo| yield todo, todos.index(todo) } # remember each todo is a hash, and our call in lists.erb is `sort_todos(@list[:todos]) do |todo, index|`, so our key is a todo, but is passed to block first in the lists.erb view
+    complete_todos.each { |todo| yield todo, todos.index(todo) }
   end
 end
 
