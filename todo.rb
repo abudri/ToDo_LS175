@@ -17,6 +17,10 @@ configure do
   set :sessions_secret, 'secret' # setting the session secret, to the string 'secret'
 end
 
+configure do
+  set :erb, :escape_html => true  # Lesson 6, Sanitizing HTML: https://launchschool.com/lessons/31df6daa/assignments/d98e4174
+end
+
 helpers do
   def list_complete?(list) # checks to see if all todo items in a list are completed
     todos_count(list) > 0 && todos_remaining_count(list) == 0 # from assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
