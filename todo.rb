@@ -59,6 +59,15 @@ before do
   session[:lists] ||= [] # recall that  `session` is a hash, and for key :lists, the value is an array of lists, and each list itself is a hash  # to ensure we at least have an empty array if session[:lists] is non-existent, or nil, https://launchschool.com/lessons/9230c94c/assignments/2f3d171a
 end
 
+# By using a common method to load the list, we have a place to define the code that handles a list not existing. Using redirect in Sinatra interrupts the processing of a request and prevents any later code from executing: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
+def load_list(index)
+  list = session[:lists][index] if index && session[:lists][index] # Lesson 6, handling invalid URL parameter index passed for a list
+  return list if list
+
+  session[:error] = "The specified list was not found." # session[:lists] is an array of lists, each list being a hash. if an index is attempted to be accessed that doesn't exist, like /lists/10234, then we want a redirect to home page: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
+  redirect "/lists" # "/" redirects to "/lists" of course, the home
+end
+
 get '/' do
   redirect '/lists' # so home page "/" will just take user to the "/lists" listing, what we want, https://launchschool.com/lessons/9230c94c/assignments/7bdd9818
 end
@@ -107,14 +116,14 @@ end
 # view an individual list
 get '/lists/:id' do # id in the URL is a parameter that we will be using in this method
   @list_id = params[:id].to_i # converting the "1" in "/lists/1" into an integer to get the list based off index from the hash session[:lists], which returns and is an array. Change from id to @list_id in https://launchschool.com/lessons/9230c94c/assignments/046ee3e0 (about 14-15 mins)
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   erb :list, layout: :layout
 end
 
 # get form for editing an existing todo list
 get '/lists/:id/edit' do
   id = params[:id].to_i
-  @list = session[:lists][id]
+  @list = load_list(id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   erb :edit_list, layout: :layout
 end
 
@@ -122,7 +131,7 @@ end
 post '/lists/:id' do
   list_name = params[:list_name].strip # for use in checking if name passed in as a param is valid(exists, not too long or short) before saving, see: https://launchschool.com/lessons/9230c94c/assignments/7923bc3a // .strip to remove any leading or trailing whitespace
   id = params[:id].to_i # from edit existing list method above
-  @list = session[:lists][id] # from edit existing list method above
+  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
 
   error = error_for_list_name(list_name) # method call returns a string error message from the method if the list_name passed in is invalid, otherwise it will return nil and the first branch of the if statement won't be executed.
   if error
@@ -146,7 +155,7 @@ end
 # add a todo item to an individual list: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0
 post '/lists/:list_id/todos' do
   @list_id = params[:list_id].to_i # from edit existing list method above, id of the list, but since using todo items, we say :list_id
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   text = params[:todo].strip
 
   error = error_for_todo(text)
@@ -163,17 +172,17 @@ end
 # delete a todo item from a list
 post '/lists/:list_id/todos/:id/destroy' do
   @list_id = params[:list_id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
   @list[:todos].delete_at(todo_id)
   session[:success] = 'The todo item has been deleted from the list.'
   redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from
 end
 
-# marks a todo item completed or not completed based on current value, after clicking checkbox
+# updates status of a todo item. Marks a todo item completed or not completed based on current value, after clicking checkbox
 post '/lists/:list_id/todos/:id' do
   @list_id = params[:list_id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
   is_completed = params[:completed] == 'true'
   @list[:todos][todo_id][:completed] = is_completed # from the form in list.erb,  `name="completed"`
@@ -184,7 +193,7 @@ end
 # Mark all todo items on a list as Complete true
 post '/lists/:id/complete_all' do
   @list_id = params[:id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   @list[:todos].each { |todo| todo[:completed] = true }
   session[:success] = 'The todo items have all been updated to completed.'
   redirect "/lists/#{@list_id}"
