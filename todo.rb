@@ -48,7 +48,7 @@ helpers do
 
   def sort_todos(todos)
     # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts todo items for a list in order with ones complete at bottom and ones not complete at top
-    complete_todos, incomplete_todos = todos.partition { |todo| todo[:complete] } # refactored version late in assignment
+    complete_todos, incomplete_todos = todos.partition { |todo| todo[:completed] } # refactored version late in assignment
 
     incomplete_todos.each { |todo| yield todo, todos.index(todo) } # remember each todo is a hash, and our call in lists.erb is `sort_todos(@list[:todos]) do |todo, index|`, so our key is a todo, but is passed to block first in the lists.erb view
     complete_todos.each { |todo| yield todo, todos.index(todo) }
