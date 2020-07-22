@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'sinatra' 
+require 'sinatra'
 require 'sinatra/reloader' if development? # deploying to Heroku/Production lesson: https://launchschool.com/lessons/9230c94c/assignments/7d7b4dd7
 require 'sinatra/content_for'
 require 'tilt/erubis'
@@ -18,7 +18,7 @@ configure do
 end
 
 configure do
-  set :erb, :escape_html => true  # Lesson 6, Sanitizing HTML: https://launchschool.com/lessons/31df6daa/assignments/d98e4174
+  set :erb, escape_html: true # Lesson 6, Sanitizing HTML: https://launchschool.com/lessons/31df6daa/assignments/d98e4174
 end
 
 helpers do
@@ -64,8 +64,8 @@ def load_list(index)
   list = session[:lists][index] if index && session[:lists][index] # Lesson 6, handling invalid URL parameter index passed for a list
   return list if list
 
-  session[:error] = "The specified list was not found." # session[:lists] is an array of lists, each list being a hash. if an index is attempted to be accessed that doesn't exist, like /lists/10234, then we want a redirect to home page: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
-  redirect "/lists" # "/" redirects to "/lists" of course, the home
+  session[:error] = 'The specified list was not found.' # session[:lists] is an array of lists, each list being a hash. if an index is attempted to be accessed that doesn't exist, like /lists/10234, then we want a redirect to home page: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
+  redirect '/lists' # "/" redirects to "/lists" of course, the home
 end
 
 get '/' do
