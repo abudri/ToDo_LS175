@@ -148,8 +148,12 @@ end
 post '/lists/:id/destroy' do
   id = params[:id].to_i # from edit existing list method above
   session[:lists].delete_at(id) # remove the list - which is a hash itself, from the session array - using .delete_at, which will delete at the specified index you pass to it, in our case the id is our index
-  session[:success] = 'The list has been deleted.'
-  redirect '/lists' # redirect to the home page which is '/lists'
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest" # conditional for checking if an AJAX request was made, see Lesson 6: https://launchschool.com/lessons/2c69904e/assignments/94ee8ca2
+    '/lists'
+  else
+    session[:success] = 'The list has been deleted.'
+    redirect '/lists' # redirect to the home page which is '/lists'
+  end
 end
 
 # add a todo item to an individual list: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0
@@ -175,8 +179,12 @@ post '/lists/:list_id/todos/:id/destroy' do
   @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
   @list[:todos].delete_at(todo_id)
-  session[:success] = 'The todo item has been deleted from the list.'
-  redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest" # conditional for checking if an AJAX request was made, see Lesson 6: https://launchschool.com/lessons/2c69904e/assignments/94ee8ca2
+    status 204
+  else
+    session[:success] = 'The todo item has been deleted from the list.' # original existing code from earlier
+    redirect "/lists/#{@list_id}" # redirect back to the list we just deleted the list item from
+  end
 end
 
 # updates status of a todo item. Marks a todo item completed or not completed based on current value, after clicking checkbox
