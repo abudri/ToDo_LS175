@@ -72,11 +72,6 @@ def next_element_id(elements) # for assigning a next available id for either a t
   max + 1 # || 0 in above line prevents nil + 1 error in case array is emtpy and [].max returns nil, so the || 0 will execute and max = 0 in that case.  So it gets the max id of an existing list or todo item id set(depending on if this is called for a list or a todo item), and then adds 1.  This return value is set as the id for any new list or todo item
 end
 
-# def next_todo_id(todos)
-#   max = todos.map {|todo| todo[:id] }.max || 0
-#   max + 1
-# end
-
 get '/' do
   redirect '/lists' # so home page "/" will just take user to the "/lists" listing, what we want, https://launchschool.com/lessons/9230c94c/assignments/7bdd9818
 end
