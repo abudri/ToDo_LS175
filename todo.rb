@@ -38,12 +38,11 @@ helpers do
     list[:todos].reject { |todo| todo[:completed] }.size # gives count of selects how many todo items that are left to be completed int he list[:todos] array. Assignment: https://launchschool.com/lessons/9230c94c/assignments/dd71166b
   end
 
-  def sort_lists(lists)
-    # from assignment https://launchschool.com/lessons/9230c94c/assignments/5046aba5, sorts lists in order with ones complete at bottom and ones not complete at top
-    complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) } # returns nested array, first array is for list objects that evalutes in block to true, and 2nd array is for those that don't
+  def sort_lists(lists, &block)
+    complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) }  # this whole method totally refactored in lesson 6 to make room for lists having ids, see: https://launchschool.com/lessons/2c69904e/assignments/a8c93890
 
-    incomplete_lists.each { |list| yield list, lists.index(list) } # remember each list is a hash, and our call in lists.erb is `sort_lists(@lists) do |list, index| `, so our key is a list, but is passed to block first in the lists.erb view
-    complete_lists.each { |list| yield list, lists.index(list) }
+    incomplete_lists.each(&block)
+    complete_lists.each(&block)
   end
 
   def sort_todos(todos)
@@ -60,13 +59,23 @@ before do
 end
 
 # By using a common method to load the list, we have a place to define the code that handles a list not existing. Using redirect in Sinatra interrupts the processing of a request and prevents any later code from executing: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
-def load_list(index)
-  list = session[:lists][index] if index && session[:lists][index] # Lesson 6, handling invalid URL parameter index passed for a list
+def load_list(id)
+  list = session[:lists].find {|list| list[:id] == id } # Lesson 6, handling invalid URL parameter index passed for a list
   return list if list
 
   session[:error] = 'The specified list was not found.' # session[:lists] is an array of lists, each list being a hash. if an index is attempted to be accessed that doesn't exist, like /lists/10234, then we want a redirect to home page: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   redirect '/lists' # "/" redirects to "/lists" of course, the home
 end
+
+def next_element_id(elements) # for assigning a next available id for either a todo list itself or a todo item.  Was called `next_todo_id` in previous assignment, refactored in this new lesson 6 assignment: https://launchschool.com/lessons/2c69904e/assignments/a8c93890
+  max = elements.map { |element| element[:id] }.max || 0 # the `|| 0` handles case of making the first todo item, fro which [].max returns nil, so nil || 0 return 0 and we avoid the nil + 1 error on next line
+  max + 1 # || 0 in above line prevents nil + 1 error in case array is emtpy and [].max returns nil, so the || 0 will execute and max = 0 in that case.  So it gets the max id of an existing list or todo item id set(depending on if this is called for a list or a todo item), and then adds 1.  This return value is set as the id for any new list or todo item
+end
+
+# def next_todo_id(todos)
+#   max = todos.map {|todo| todo[:id] }.max || 0
+#   max + 1
+# end
 
 get '/' do
   redirect '/lists' # so home page "/" will just take user to the "/lists" listing, what we want, https://launchschool.com/lessons/9230c94c/assignments/7bdd9818
@@ -107,16 +116,20 @@ post '/lists' do
     session[:error] = error # refactored at: https://launchschool.com/lessons/9230c94c/assignments/b47401cd
     erb :new_list, layout: :layout
   else # create the new list name since the above two validations passed
-    session[:lists] << { name: list_name, todos: [] } # remember in our form the <input> tag had a `name` of "list_name", so this is the key, and the value is whatever data we submitted if any, not there yet at this point, and note "list_name" can simply be treated as a symbol by sinatra, so :list_name in params hash
+    id = next_element_id(session[:lists]) # for assigning an :id to a list, a new feature at this point, Lesson 6: https://launchschool.com/lessons/2c69904e/assignments/a8c93890
+    session[:lists] << { id: id, name: list_name, todos: [] } # remember in our form the <input> tag had a `name` of "list_name", so this is the key, and the value is whatever data we submitted if any, not there yet at this point, and note "list_name" can simply be treated as a symbol by sinatra, so :list_name in params hash
     session[:success] = 'The list has been created.' # flash message for successful list creation https://launchschool.com/lessons/9230c94c/assignments/cfb2f0cb
     redirect '/lists'
   end
 end
 
-# view an individual list
+# view an individual todo list
 get '/lists/:id' do # id in the URL is a parameter that we will be using in this method
-  @list_id = params[:id].to_i # converting the "1" in "/lists/1" into an integer to get the list based off index from the hash session[:lists], which returns and is an array. Change from id to @list_id in https://launchschool.com/lessons/9230c94c/assignments/046ee3e0 (about 14-15 mins)
-  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
+  id = params[:id].to_i
+  @list = load_list(id)
+  # @list_name = list[:name]
+  # @list_id = list[:id]
+  # @todos = list[:todos] # for some reason this and all the above lines in this method are new in my code but not at this point in lesson 6, in any case: https://launchschool.com/lessons/2c69904e/assignments/a8c93890
   erb :list, layout: :layout
 end
 
@@ -147,7 +160,7 @@ end
 # delete an individual list, https://launchschool.com/lessons/9230c94c/assignments/ace30260
 post '/lists/:id/destroy' do
   id = params[:id].to_i # from edit existing list method above
-  session[:lists].delete_at(id) # remove the list - which is a hash itself, from the session array - using .delete_at, which will delete at the specified index you pass to it, in our case the id is our index
+  session[:lists].reject! {|list| list[:id] == id } # remove the list - which is a hash itself, from the session array. refactored in lesson 6 to use Array#reject! and an actual id not based on index, for the list: https://launchschool.com/lessons/2c69904e/assignments/a8c93890
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest" # conditional for checking if an AJAX request was made, see Lesson 6: https://launchschool.com/lessons/2c69904e/assignments/94ee8ca2
     '/lists'
   else
@@ -156,7 +169,7 @@ post '/lists/:id/destroy' do
   end
 end
 
-# add a todo item to an individual list: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0
+# add a new todo item to an individual list: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0
 post '/lists/:list_id/todos' do
   @list_id = params[:list_id].to_i # from edit existing list method above, id of the list, but since using todo items, we say :list_id
   @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
@@ -167,7 +180,8 @@ post '/lists/:list_id/todos' do
     session[:error] = error
     erb :list, layout: :layout
   else
-    @list[:todos] << { name: text, completed: false } # params[:todo] is the submitted text taken from form submission at the list.erb page submit form for a todo item, which is named "todo"
+    id = next_element_id(@list[:todos]) # assign an id to the new todo item, Lesson 6 assignment: https://launchschool.com/lessons/9230c94c/assignments/046ee3e0, refactored to general method for lists and ids in next assignment: https://launchschool.com/lessons/2c69904e/assignments/a8c93890
+    @list[:todos] << { id: id, name: text, completed: false } # params[:todo] is the submitted text taken from form submission at the list.erb page submit form for a todo item, which is named "todo"
     session[:success] = 'The todo item was added to the list'
     redirect "/lists/#{@list_id}" # redirect back to the list we just added the item to
   end
@@ -178,7 +192,7 @@ post '/lists/:list_id/todos/:id/destroy' do
   @list_id = params[:list_id].to_i
   @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
-  @list[:todos].delete_at(todo_id)
+  @list[:todos].reject! {|todo| todo[:id] == todo_id }  # updated Lesson 6, for any existing todo item with an id equal to todo_id `:id` from the url params, delete from todos with Array#reject!, https://launchschool.com/lessons/2c69904e/assignments/af479b47
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest" # conditional for checking if an AJAX request was made, see Lesson 6: https://launchschool.com/lessons/2c69904e/assignments/94ee8ca2
     status 204
   else
@@ -193,7 +207,8 @@ post '/lists/:list_id/todos/:id' do
   @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
   is_completed = params[:completed] == 'true'
-  @list[:todos][todo_id][:completed] = is_completed # from the form in list.erb,  `name="completed"`
+  todo =  @list[:todos].find {|todo| todo[:id] == todo_id } # refactored in lesson 6 assignment https://launchschool.com/lessons/2c69904e/assignments/af479b47
+  todo[:completed] = is_completed = params[:completed] == 'true'
   session[:success] = 'The todo item has been updated.'
   redirect "/lists/#{@list_id}"
 end
