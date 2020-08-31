@@ -139,7 +139,7 @@ end
 post '/lists/:id' do
   list_name = params[:list_name].strip # for use in checking if name passed in as a param is valid(exists, not too long or short) before saving, see: https://launchschool.com/lessons/9230c94c/assignments/7923bc3a // .strip to remove any leading or trailing whitespace
   id = params[:id].to_i # from edit existing list method above
-  @list = load_list(@list_id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
+  @list = load_list(id) # Refactor from Lesson 6 assignment for handling non-existing lists passed to url params: https://launchschool.com/lessons/31df6daa/assignments/cb2ef1d2
 
   error = error_for_list_name(list_name) # method call returns a string error message from the method if the list_name passed in is invalid, otherwise it will return nil and the first branch of the if statement won't be executed.
   if error
