@@ -203,7 +203,7 @@ post '/lists/:list_id/todos/:id' do
   todo_id = params[:id].to_i # :id here being the id, or index of the todo list item for this list
   is_completed = params[:completed] == 'true'
   todo =  @list[:todos].find {|todo| todo[:id] == todo_id } # refactored in lesson 6 assignment https://launchschool.com/lessons/2c69904e/assignments/af479b47
-  todo[:completed] = is_completed = params[:completed] == 'true'
+  todo[:completed] = is_completed
   session[:success] = 'The todo item has been updated.'
   redirect "/lists/#{@list_id}"
 end
