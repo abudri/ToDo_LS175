@@ -15,9 +15,6 @@ require 'tilt/erubis'
 configure do
   enable :sessions # tells sinatra to activate it's session support
   set :sessions_secret, 'secret' # setting the session secret, to the string 'secret'
-end
-
-configure do
   set :erb, escape_html: true # Lesson 6, Sanitizing HTML: https://launchschool.com/lessons/31df6daa/assignments/d98e4174
 end
 
